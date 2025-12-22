@@ -1,0 +1,49 @@
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+const landlordSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  mobile: { type: String, required: true, unique: true, sparse: true },
+  email: { type: String, required: true, unique: true, sparse: true },
+  password: { type: String, required: true },
+  aadhaarNumber: { 
+    type: String, 
+    required: true, 
+    unique: true, 
+    sparse: true, 
+    match: /^\d{12}$/, 
+    index: true
+  },
+  address: { type: String, required: true },
+  pinCode: { type: String, required: true, match: /^\d{6}$/ },
+  state: { type: String, required: true },
+  panNumber: { 
+    type: String, 
+    required: true, 
+    unique: true, 
+    sparse: true, 
+    match: /^[A-Z]{5}\d{4}[A-Z]{1}$/,
+    index: true
+  },
+  profilePhoto: { type: String },
+  dob: { type: Date, required: true },
+  gender: { type: String, enum: ['Male', 'Female', 'Other'], required: true },
+  createdAt: { type: Date, default: Date.now },
+  properties: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Property' }]
+});
+
+// Hash password before saving
+landlordSchema.pre('save', async function(next) {
+  if (this.isModified('password')) {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+  next();
+});
+
+// Method to compare passwords
+landlordSchema.methods.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+module.exports = mongoose.model('Landlord', landlordSchema);

@@ -1,0 +1,62 @@
+const express = require('express');
+const router = express.Router();
+const auth = require('../middleware/auth');
+const { 
+  registerLandlord,
+  findLandlord,
+  getLandlordProfile,
+  getAllProperties,
+  getAvailableProperties,
+  addProperty
+} = require('../controllers/landlordController');
+const { getAllTenantDues } = require('../controllers/analyticsController');
+
+// Landlord account operations
+router.post('/register', registerLandlord);
+router.post('/find', findLandlord);
+router.get('/profile', auth, getLandlordProfile);
+router.put('/profile', auth, require('../controllers/landlordController').updateLandlordInfo);
+
+// Financial analytics
+router.get('/financials', auth, (req, res) => {
+  res.status(200).json({ success: true, message: "Financial data will be available soon" });
+});
+router.get('/dues', auth, (req, res) => {
+  res.status(200).json({ success: true, message: "Dues data will be available soon" });
+});
+router.get('/dues/electricity', auth, (req, res) => {
+  res.status(200).json({ success: true, message: "Electricity dues data will be available soon" });
+});
+router.get('/dues/rent', auth, (req, res) => {
+  res.status(200).json({ success: true, message: "Rent dues data will be available soon" });
+});
+router.get('/collection', auth, (req, res) => {
+  res.status(200).json({ success: true, message: "Collection data will be available soon" });
+});
+
+// Complaint Management
+router.get('/complaints', auth, require('../controllers/complaintController').getAllComplaints);
+
+// Tenant management
+router.get('/tenants', auth, (req, res) => {
+  res.status(200).json({ success: true, message: "Tenant data will be available soon" });
+});
+
+// Property management
+router.get('/properties', auth, getAllProperties);
+router.get('/properties/available', auth, getAvailableProperties);
+router.post('/properties', auth, addProperty);  // Add POST route for plural endpoint
+
+// Import booking controller
+const {
+  getPendingTenants,
+  getBookingRequests,
+  updateBookingRequest
+} = require('../controllers/bookingController');
+
+// Booking and pending tenant routes
+router.get('/tenants/pending', auth, getPendingTenants);
+router.get('/booking-requests', auth, getBookingRequests);
+router.put('/booking-requests', auth, updateBookingRequest);
+
+module.exports = router;

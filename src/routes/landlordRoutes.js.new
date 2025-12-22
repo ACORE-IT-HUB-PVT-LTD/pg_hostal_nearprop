@@ -1,0 +1,34 @@
+const express = require('express');
+const router = express.Router();
+const { auth } = require('../middleware/auth');
+const { 
+  registerLandlord, 
+  getLandlordProfile, 
+  addProperty, 
+  updateProperty, 
+  getPropertyById, 
+  getTenantById, 
+  getPropertyFinancials, 
+  getAllProperties, 
+  getAvailableProperties
+} = require('../controllers/landlordController');
+
+// Landlord account operations
+router.post('/register', registerLandlord);
+router.get('/profile', auth, getLandlordProfile);
+
+// Property management
+router.post('/properties', auth, addProperty);
+router.put('/properties/:propertyId', auth, updateProperty);
+router.get('/properties/:propertyId', auth, getPropertyById);
+router.get('/properties', auth, getAllProperties);
+router.get('/property/list', auth, getAllProperties); // Alias for listing
+router.get('/available-properties', auth, getAvailableProperties);
+
+// Tenant management (simplified)
+router.get('/tenants/:tenantId', auth, getTenantById);
+
+// Financial reports
+router.get('/properties/:propertyId/financials', auth, getPropertyFinancials);
+
+module.exports = router;
