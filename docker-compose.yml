@@ -10,7 +10,7 @@ services:
       PORT: 3002
       NODE_ENV: production
       MONGODB_URI: mongodb://pghostel_user:Pg_h%40%23123@localhost:27017/pghostel_db?authSource=pghostel_db
-      REDIS_URL: redis://localhost:6379
+      REDIS_URL: redis://:Pg_hostel%40123@localhost:6379 
     depends_on:
       - mongodb
       - redis
