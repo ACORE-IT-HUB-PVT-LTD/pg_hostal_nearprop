@@ -2,6 +2,7 @@ const Subscription = require('../models/Subscription');
 const Tenant = require('../models/Tenant');
 const Landlord = require('../models/Landlord');
 const mongoose = require('mongoose');
+const SubscriptionPlan = require('../models/SubscriptionPlan');
 
 /**
  * Buy a subscription for a user
@@ -18,92 +19,166 @@ const mongoose = require('mongoose');
  * @body {string} payment.payment_id - Optional
  */
 const buySubscription = async (req, res) => {
-  const {
-    userId,
-    userType,
-    plan_id,
-    plan_name,
-    amount,
-    billing_cycle,
-    auto_renew = false,
-    payment = {}, // { provider, order_id, payment_id, payment_status }
-  } = req.body;
-
   try {
-    // Validate required fields
-    if (!userId || !userType || !plan_id || !plan_name || !amount || !billing_cycle) {
-      return res.status(400).json({ message: 'Missing required fields' });
+    const {
+      userId,
+      plan_id,
+      billing_cycle,
+      auto_renew = false,
+      payment = {},
+    } = req.body;
+
+    // =============================
+    // 1️⃣ BASIC VALIDATION
+    // =============================
+    if (!userId || !plan_id || !billing_cycle) {
+      return res.status(400).json({
+        message: "Missing required fields",
+      });
     }
 
-    if (!['tenant', 'landlord'].includes(userType)) {
-      return res.status(400).json({ message: 'Invalid user type (tenant or landlord only)' });
+    if (!["monthly", "quarterly", "yearly"].includes(billing_cycle)) {
+      return res.status(400).json({
+        message: "Invalid billing cycle",
+      });
     }
 
-    if (!['monthly', 'quarterly', 'yearly'].includes(billing_cycle)) {
-      return res.status(400).json({ message: 'Invalid billing cycle' });
+    // =============================
+    // 2️⃣ VALIDATE LANDLORD
+    // =============================
+    const landlord = await Landlord.findById(userId);
+    if (!landlord) {
+      return res.status(404).json({
+        message: "Landlord not found",
+      });
     }
 
-    // Validate user exists
-    let user;
-    if (userType === 'tenant') {
-      user = await Tenant.findById(userId);
-      if (!user) return res.status(404).json({ message: 'Tenant not found' });
-    } else {
-      user = await Landlord.findById(userId);
-      if (!user) return res.status(404).json({ message: 'Landlord not found' });
+    // =============================
+    // 3️⃣ FETCH PLAN (SECURE)
+    // =============================
+    const plan = await SubscriptionPlan.findById(plan_id);
+    if (!plan) {
+      return res.status(404).json({
+        message: "Subscription plan not found",
+      });
     }
 
-    // Check for active subscription
+    // =============================
+    // 4️⃣ CHECK ACTIVE SUBSCRIPTION
+    // =============================
     const activeSub = await Subscription.findOne({
-      user_id: userId,
-      status: 'active',
+      landlordId: userId,
+      status: "active",
     });
 
+    // =============================
+    // 5️⃣ DATE CALCULATION FUNCTION
+    // =============================
+    const calculateEndDate = (start, cycle) => {
+      const date = new Date(start);
+
+      if (cycle === "monthly") date.setMonth(date.getMonth() + 1);
+      if (cycle === "quarterly") date.setMonth(date.getMonth() + 3);
+      if (cycle === "yearly") date.setFullYear(date.getFullYear() + 1);
+
+      return date;
+    };
+
+    // ==================================================
+    // ✅ CASE 1: ACTIVE SUBSCRIPTION → UPGRADE / TOP-UP
+    // ==================================================
     if (activeSub) {
-      return res.status(400).json({ message: 'User already has an active subscription' });
+      // Extend from future date if still valid
+      const baseDate =
+        activeSub.end_date > new Date()
+          ? activeSub.end_date
+          : new Date();
+
+      activeSub.end_date = calculateEndDate(baseDate, billing_cycle);
+
+      // Increase property limit
+      activeSub.property_limit += plan.property_limit;
+
+      // Update amount (optional: cumulative)
+      activeSub.amount += plan.price;
+
+      // Save payment history
+      activeSub.payment_history.push({
+        plan_id: plan._id,
+        plan_name: plan.name,
+        amount: plan.price,
+        billing_cycle,
+        paid_at: new Date(),
+        payment,
+      });
+
+      await activeSub.save();
+
+      return res.status(200).json({
+        message: "Subscription upgraded successfully",
+        subscription: activeSub,
+      });
     }
 
-    // Calculate dates
-    const start_date = new Date();
-    const end_date = new Date(start_date);
+    // ==================================================
+    // ✅ CASE 2: NO ACTIVE SUB → CREATE NEW
+    // ==================================================
+    const start_date =
+      payment.payment_status === "success" ? new Date() : null;
 
-    if (billing_cycle === 'monthly') end_date.setMonth(end_date.getMonth() + 1);
-    else if (billing_cycle === 'quarterly') end_date.setMonth(end_date.getMonth() + 3);
-    else if (billing_cycle === 'yearly') end_date.setFullYear(end_date.getFullYear() + 1);
+    const end_date =
+      payment.payment_status === "success"
+        ? calculateEndDate(start_date, billing_cycle)
+        : null;
 
-    // Create subscription
     const subscription = new Subscription({
-      user_id: userId,
-      plan_id,
-      plan_name,
-      amount,
-      currency: 'INR',
+      landlordId: userId,
+      plan_id: plan._id,
+      plan_name: plan.name,
+      property_limit: plan.property_limit,
+      amount: plan.price,
+      currency: "INR",
       billing_cycle,
       start_date,
       end_date,
-      status: 'active', // initially pending until payment
+      status:
+        payment.payment_status === "success" ? "active" : "pending",
       auto_renew,
       payment: {
         provider: payment.provider || null,
         order_id: payment.order_id || null,
         payment_id: payment.payment_id || null,
-        payment_status: payment.payment_status || 'pending',
-        paid_at: payment.payment_status === 'success' ? new Date() : null,
+        payment_status: payment.payment_status || "pending",
+        paid_at:
+          payment.payment_status === "success" ? new Date() : null,
       },
-      metadata: req.body.metadata || {},
+      payment_history: [
+        {
+          plan_id: plan._id,
+          plan_name: plan.name,
+          amount: plan.price,
+          billing_cycle,
+          paid_at: new Date(),
+          payment,
+        },
+      ],
     });
 
     await subscription.save();
 
-    res.status(201).json({
-      message: 'Subscription created successfully',
+    return res.status(201).json({
+      message: "Subscription created successfully",
       subscription,
     });
   } catch (error) {
-    console.error('Buy subscription error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Buy subscription error:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };
+
 
 /**
  * Get subscription details by user ID
@@ -113,9 +188,9 @@ const getSubscriptionByLandlordId = async (req, res) => {
   try {
     const { landlordId } = req.params;
 
-    const subscription = await Subscription.findOne({ landlord_id: landlordId })
+    const subscription = await Subscription.findOne({ landlordId: landlordId })
       .populate({
-        path: "_id",
+        path: "landlordId",
         select: "name mobile email",
       })
       .populate("plan_id")

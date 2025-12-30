@@ -2,13 +2,7 @@ const mongoose = require("mongoose");
 
 const subscriptionSchema = new mongoose.Schema(
   {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Landlord",
-      required: true,
-      index: true,
-    },
-
+    landlordId: { type: mongoose.Schema.Types.ObjectId, ref: 'Landlord', required: true },
     plan_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "SubscriptionPlan",
@@ -18,6 +12,12 @@ const subscriptionSchema = new mongoose.Schema(
     plan_name: {
       type: String,
       required: true,
+    },
+
+    // 💡 IMPORTANT
+    property_limit: {
+      type: Number,
+      default: 0,
     },
 
     amount: {
@@ -59,35 +59,33 @@ const subscriptionSchema = new mongoose.Schema(
     },
 
     payment: {
-      provider: {
-        type: String, // razorpay / stripe / cashfree
-      },
-      order_id: {
-        type: String,
-      },
-      payment_id: {
-        type: String,
-      },
+      provider: String,
+      order_id: String,
+      payment_id: String,
       payment_status: {
         type: String,
         enum: ["success", "failed", "pending"],
       },
-      paid_at: {
-        type: Date,
+      paid_at: Date,
+    },
+
+    // ✅ Track all top-ups / renewals
+    payment_history: [
+      {
+        plan_id: mongoose.Schema.Types.ObjectId,
+        plan_name: String,
+        amount: Number,
+        billing_cycle: String,
+        paid_at: Date,
+        payment: Object,
       },
-    },
+    ],
 
-    cancelled_at: {
-      type: Date,
-    },
+    cancelled_at: Date,
 
-    metadata: {
-      type: Object, // flexible extra info
-    },
+    metadata: Object,
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("Subscription", subscriptionSchema);

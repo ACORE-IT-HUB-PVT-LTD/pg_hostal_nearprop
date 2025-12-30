@@ -52,8 +52,110 @@ app.use((req, res, next) => {
   next();
 });
 
-// Configure CORS to allow requests from any origin - more robust implementation
+/*
+const allowedOrigins = [
+  'https://nearprop.com',
+  'https://',
+
+  'https://subadmin.nearprop.com',
+  'https://pgandhostel.nearprop.com',
+  'https://hotelsandbanquets.nearprop.com',
+  'https://propertyadviser.nearprop.com',
+  'https://sellerdashboard.nearprop.com',
+  'https://developerdashboard.nearprop.com',
+  'https://admindashboard.nearprop.com',
+  'https://franchise.nearprop.com'
+];
+
+*/
+const allowedOrigins = [
+  'https://nearprop.com',
+
+  'https://subadmin.nearprop.com',
+  'https://pgandhostel.nearprop.com',
+  'https://hotelsandbanquets.nearprop.com',
+  'https://propertyadviser.nearprop.com',
+  'https://sellerdashboard.nearprop.com',
+  'https://developerdashboard.nearprop.com',
+  'https://admindashboard.nearprop.com',
+  'https://franchise.nearprop.com',
+
+  // Local development
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:4200'
+];
+
+
 app.use(cors({
+  origin: function (origin, callback) {
+    // Allow server-to-server tools (Postman, curl)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('CORS not allowed for this origin'), false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ]
+}));
+
+
+
+
+app.options('*', cors());
+
+
+/*app.use(cors({
+  origin: function (origin, callback) {
+    // Allow ALL origins
+    callback(null, true);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ],
+  exposedHeaders: ['Content-Length', 'X-Request-ID'],
+  credentials: true,          // ✅ works because origin is echoed, not '*'
+  maxAge: 86400,
+  optionsSuccessStatus: 204
+}));
+*/
+
+
+// Configure CORS to allow requests from any origin - more robust implementation
+/*app.use(cors({
+ origin: function(origin, callback) {
+    // Allow requests from frontend only
+    if (!origin || origin === 'https://pgandhostel.nearprop.com') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Length', 'X-Request-ID'],
+  credentials: true,
+  maxAge: 86400,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+}));
+
+
   origin: function(origin, callback) {
     // Allow any origin to access the API
     callback(null, true);
@@ -66,6 +168,8 @@ app.use(cors({
   preflightContinue: false,
   optionsSuccessStatus: 204
 }));
+
+*/
 
 app.use(express.json({ limit: '20mb' })); // Increase payload limit for image uploads
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));

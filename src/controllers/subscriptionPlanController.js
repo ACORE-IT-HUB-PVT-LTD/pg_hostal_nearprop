@@ -10,59 +10,84 @@ async function createPlan(req, res) {
       currency,
       billing_cycle,
       duration_days,
+      property_limit,
       features,
       is_active,
     } = req.body;
 
+    // =========================
     // ✅ Validation
-    if (!name || typeof price === 'undefined' || !billing_cycle || !duration_days) {
+    // =========================
+    if (
+      !name ||
+      typeof price === "undefined" ||
+      !billing_cycle ||
+      !duration_days ||
+      typeof property_limit === "undefined"
+    ) {
       return res.status(400).json({
-        message: 'name, price, billing_cycle and duration_days are required',
+        message:
+          "name, price, billing_cycle, duration_days, and property_limit are required",
       });
     }
 
     if (!Number.isInteger(duration_days) || duration_days <= 0) {
       return res.status(400).json({
-        message: 'duration_days must be a positive integer',
+        message: "duration_days must be a positive integer",
       });
     }
 
-    // ✅ Check duplicate plan
-    const existing = await SubscriptionPlan.findOne({ name: name.trim() });
-    if (existing) {
-      return res.status(409).json({ message: 'Plan with same name already exists' });
+    if (!Number.isInteger(property_limit) || property_limit < 1) {
+      return res.status(400).json({
+        message: "property_limit must be an integer greater than or equal to 1",
+      });
     }
 
+    // =========================
+    // ✅ Check duplicate plan
+    // =========================
+    const existing = await SubscriptionPlan.findOne({
+      name: name.trim(),
+    });
+
+    if (existing) {
+      return res.status(409).json({
+        message: "Plan with the same name already exists",
+      });
+    }
+
+    // =========================
     // ✅ Create plan
+    // =========================
     const plan = new SubscriptionPlan({
       name: name.trim(),
       price,
-      currency: currency || 'INR',
+      currency: currency || "INR",
       billing_cycle,
       duration_days,
+      property_limit,
       features: Array.isArray(features)
         ? features
         : features
         ? [features]
         : [],
-      is_active: typeof is_active === 'boolean' ? is_active : true,
+      is_active: typeof is_active === "boolean" ? is_active : true,
     });
 
     await plan.save();
 
     return res.status(201).json({
-      message: 'Plan created successfully',
+      message: "Plan created successfully",
       plan,
     });
   } catch (err) {
-    console.error('createPlan error', err);
+    console.error("createPlan error", err);
     return res.status(500).json({
-      message: 'Internal server error',
+      message: "Internal server error",
       error: err.message,
     });
   }
 }
-
 
 // Seed some default subscription plans (Admin)
 async function seedDefaultPlans(req, res) {

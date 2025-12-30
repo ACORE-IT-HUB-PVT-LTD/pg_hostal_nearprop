@@ -1,0 +1,19 @@
+# Environment variables
+
+
+# Node
+node_modules/
+
+# Uploads / user files
+src/uploads/
+
+# Logs
+logs
+*.log
+
+# OS
+.DS_Store
+
+# PM2
+pids
+*.pid
