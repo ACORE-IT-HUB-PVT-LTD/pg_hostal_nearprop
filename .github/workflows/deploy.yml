@@ -1,16 +1,26 @@
+name: Deploy Node App
 
-services:
-  node-app:
-    build: .
-    container_name: hotel_node
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "5002:5002"
-    networks:
-      - pg_hostel
+on:
+  push:
+    branches:
+      - main
 
-networks:
-  pg_hostel:
-    external: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/new_run_pm2_pghostal
+            git pull origin main
+            docker compose down
+            docker compose up -d --build
