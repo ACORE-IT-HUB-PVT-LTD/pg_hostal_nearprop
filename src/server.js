@@ -579,7 +579,7 @@ const socketService = require('./services/socketService');
 const io = socketService.initializeSocketIO(server);
 
 // Start server
-server.listen(PORT, () => {
+server.listen(PORT,'0.0.0.0',() => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Socket.IO initialized for real-time notifications`);
 });
