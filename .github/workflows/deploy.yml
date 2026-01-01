@@ -1,38 +1,16 @@
-name: Deploy Node App (Docker Compose)
 
-on:
-  push:
-    branches:
-      - main
+services:
+  node-app:
+    build: .
+    container_name: hotel_node
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5002:5002"
+    networks:
+      - pg_hostel
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            set -e
-
-            echo " Move to project directory"
-            cd ~/new_run_pm2_pghostal
-
-            echo " Pull latest code"
-            git pull origin main
-
-            echo " Stop existing containers"
-            docker compose down
-
-            echo " Build & start containers"
-            docker compose up -d --build
-
-            echo " Running containers"
-            docker compose ps
+networks:
+  pg_hostel:
+    external: true

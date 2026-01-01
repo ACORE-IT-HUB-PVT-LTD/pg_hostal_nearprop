@@ -7,33 +7,14 @@ services:
     ports:
       - "3002:3002"
     environment:
-      PORT: 3002
-      NODE_ENV: production
-      MONGODB_URI: mongodb://pghostel_user:Pg_h%40%23123@localhost:27017/pghostel_db?authSource=pghostel_db
-      REDIS_URL: redis://:Pg_hostel%40123@localhost:6379 
-    depends_on:
-      - mongodb
-      - redis
-    restart: always
-
-  mongodb:
-    image: mongo:7
-    container_name: mongodb
-   # ports:
-    #  - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: pghostel_user
-      MONGO_INITDB_ROOT_PASSWORD: Pg_h@#123
-    volumes:
-      - mongo_data:/data/db
+      #PORT: 3002
+      #NODE_ENV: production
+      #MONGODB_URI: mongodb://pghostel_user:Pg_h%40%23123@host.docker.internal:27017/pghostel_db?authSource=pghostel_db
+      #REDIS_URL: redis://:Pg_hostel%40123@3.108.108.13:6379
+      - .env
     restart: always
 
   redis:
     image: redis:7
     container_name: redis
-   # ports:
-    #  - "6379:6379"
     restart: always
-
-volumes:
-  mongo_data:

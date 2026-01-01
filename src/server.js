@@ -71,6 +71,10 @@ const allowedOrigins = [
 const allowedOrigins = [
   'https://nearprop.com',
 
+  'https://nearprop.in',          
+  'https://www.nearprop.in',
+
+
   'https://subadmin.nearprop.com',
   'https://pgandhostel.nearprop.com',
   'https://hotelsandbanquets.nearprop.com',
