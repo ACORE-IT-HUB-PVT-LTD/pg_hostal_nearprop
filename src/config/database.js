@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const connectMongoDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pg_rental_db';
+    const mongoURI = process.env.MONGODB_URI;
     console.log('Connecting to MongoDB at:', mongoURI);
     await mongoose.connect(mongoURI);
     console.log('MongoDB connected');
