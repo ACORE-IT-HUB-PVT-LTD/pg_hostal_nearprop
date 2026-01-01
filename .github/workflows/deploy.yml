@@ -21,7 +21,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: 22
           script: |
-            cd ~/new_run_pm2_pghostal
+            cd ~/pg_hostal_nearprop
             git pull origin main
             docker compose down
             docker compose up -d --build
