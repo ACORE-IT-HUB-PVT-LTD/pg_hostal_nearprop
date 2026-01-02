@@ -1,35 +1,41 @@
 const jwt = require('jsonwebtoken');
-
+require('dotenv').config();
 /**
  * ==============================
  *  AUTHENTICATE USER (JWT)
  * ==============================
  */
 function authenticate(req, res, next) {
-  try {
-    const authHeader = req.headers.authorization;
+    try {
+        const authHeader = req.headers.authorization;
+        console.log("Authorization Header:", authHeader);
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({
-        success: false,
-        message: "Authorization token missing",
-      });
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({
+                success: false,
+                message: "Authorization token missing",
+            });
+        }
+
+        const token = authHeader.split(" ")[1];
+        console.log("Token extracted:", token);
+        console.log("JWT Secret from env:", process.env.JWT_SECRET);
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log("Decoded JWT payload:", decoded);
+
+        req.user = decoded;
+
+        next();
+    } catch (error) {
+        console.error("JWT verification failed:", error);
+        return res.status(401).json({
+            success: false,
+            message: "Invalid or expired token",
+        });
     }
-
-    const token = authHeader.split(" ")[1];
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    req.user = decoded;
-    console.log(decoded);
-    next();
-  } catch (error) {
-    return res.status(401).json({
-      success: false,
-      message: "Invalid or expired token",
-    });
-  }
 }
+
 
 /**
  * ==============================
@@ -37,30 +43,30 @@ function authenticate(req, res, next) {
  * ==============================
  */
 function authorizeRoles(...allowedRoles) {
-  return (req, res, next) => {
-    if (!req.user || !Array.isArray(req.user.roles)) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied",
-      });
-    }
+    return (req, res, next) => {
+        if (!req.user || !Array.isArray(req.user.roles)) {
+            return res.status(403).json({
+                success: false,
+                message: "Access denied",
+            });
+        }
 
-    const userRoles = req.user.roles.map(r => r.toUpperCase());
-    const rolesAllowed = allowedRoles.map(r => r.toUpperCase());
+        const userRoles = req.user.roles.map(r => r.toUpperCase());
+        const rolesAllowed = allowedRoles.map(r => r.toUpperCase());
 
-    const hasAccess = rolesAllowed.some(role =>
-      userRoles.includes(role)
-    );
+        const hasAccess = rolesAllowed.some(role =>
+            userRoles.includes(role)
+        );
 
-    if (!hasAccess) {
-      return res.status(403).json({
-        success: false,
-        message: "You are not authorized to perform this action",
-      });
-    }
+        if (!hasAccess) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to perform this action",
+            });
+        }
 
-    next();
-  };
+        next();
+    };
 }
 
 /**
@@ -69,8 +75,8 @@ function authorizeRoles(...allowedRoles) {
  * ==============================
  */
 const adminOnly = [
-  authenticate,
-  authorizeRoles("ADMIN"),
+    authenticate,
+    authorizeRoles("ADMIN"),
 ];
 
 /**
@@ -79,14 +85,14 @@ const adminOnly = [
  * ==============================
  */
 const adminOrSubAdmin = [
-  authenticate,
-  authorizeRoles("ADMIN", "SUBADMIN"),
+    authenticate,
+    authorizeRoles("ADMIN", "SUBADMIN"),
 ];
 
 // Export all functions as CommonJS
 module.exports = {
-  authenticate,
-  authorizeRoles,
-  adminOnly,
-  adminOrSubAdmin,
+    authenticate,
+    authorizeRoles,
+    adminOnly,
+    adminOrSubAdmin,
 };

@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const subscriptionPlanController = require('../controllers/subscriptionPlanController');
-const { authenticate } = require('../middleware/verifyToken');
 
 
 router.get('/', (req, res) => {
@@ -11,7 +10,7 @@ router.get('/', (req, res) => {
  * Create a new subscription plan (Admin)
  * POST /api/subscription-plans/create
  */
-router.post('/create', authenticate, subscriptionPlanController.createPlan);
+router.post('/create',subscriptionPlanController.createPlan);
 
 
 
