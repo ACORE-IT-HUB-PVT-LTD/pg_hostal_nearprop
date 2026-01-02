@@ -1,20 +1,38 @@
-version: "3.9"
+#version: "3.9"
 
-services:
-  app:
-    build: .
-    container_name: subscription-app
-    ports:
-      - "3002:3002"
-    environment:
+#services:
+#  app:
+ #   build: .
+  #  container_name: subscription-app
+   # ports:
+    #  - "3002:3002"
+    #environment:
       #PORT: 3002
       #NODE_ENV: production
       #MONGODB_URI: mongodb://pghostel_user:Pg_h%40%23123@host.docker.internal:27017/pghostel_db?authSource=pghostel_db
       #REDIS_URL: redis://:Pg_hostel%40123@3.108.108.13:6379
-      - .env
-    restart: always
+     # - .env
+   # restart: always
 
-  redis:
-    image: redis:7
-    container_name: redis
+#  redis:
+ #   image: redis:7
+  #  container_name: redis
+  #  restart: always
+
+
+
+services:
+  node-app:
+    build: .
+    container_name: pg_hostel
     restart: always
+    env_file:
+      - .env
+    ports:
+      - "3002:3002"
+    networks:
+      - pg_hostel
+
+networks:
+  pg_hostel:
+    external: true
