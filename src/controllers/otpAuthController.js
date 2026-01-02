@@ -58,6 +58,7 @@ const requestLoginOtp = async (req, res) => {
         ? 'OTP sent successfully' 
         : 'OTP generated but SMS service failed. Check server logs for OTP',
       mobile,
+      otp,
       isRegistered,
       userName: user ? user.name : null
     });
