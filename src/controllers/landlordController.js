@@ -424,13 +424,108 @@ exports.updateLandlordInfo = async (req, res) => {
 };
 
 // Get Landlord Profile (used in routes)
+// exports.getLandlordProfile = async (req, res) => {
+//   try {
+//     const landlord = await Landlord.findById(req.user.id).select("-password");
+//     res.json({
+//       success: true,
+//       landlord
+//     });
+//   } catch (err) {
+//     console.error(err.message);
+//     res.status(500).json({
+//       success: false,
+//       message: "Server Error"
+//     });
+//   }
+// };
 exports.getLandlordProfile = async (req, res) => {
   try {
-    const landlord = await Landlord.findById(req.user.id).select("-password");
+    const landlordId = req.user.id;
+
+    const landlordData = await Landlord.aggregate([
+      // 🔹 Match logged-in landlord
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(landlordId)
+        }
+      },
+
+      // 🔹 Remove password
+      {
+        $project: {
+          password: 0
+        }
+      },
+
+      // 🔹 Properties lookup
+      {
+        $lookup: {
+          from: "properties",
+          let: { landlordId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$landlordId", "$$landlordId"]
+                }
+              }
+            },
+            { $sort: { createdAt: -1 } }
+          ],
+          as: "properties"
+        }
+      },
+
+      // 🔹 Subscriptions lookup (latest only)
+      {
+        $lookup: {
+          from: "subscriptions",
+          let: { landlordId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$landlordId", "$$landlordId"]
+                }
+              }
+            },
+            { $sort: { createdAt: -1 } },
+            { $limit: 1 }
+          ],
+          as: "subscription"
+        }
+      },
+
+      // 🔹 Add subscription flags
+      {
+        $addFields: {
+          hasSubscription: {
+            $cond: {
+              if: { $gt: [{ $size: "$subscription" }, 0] },
+              then: true,
+              else: false
+            }
+          },
+          subscription: {
+            $arrayElemAt: ["$subscription", 0]
+          }
+        }
+      }
+    ]);
+
+    if (!landlordData.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Landlord not found"
+      });
+    }
+
     res.json({
       success: true,
-      landlord
+      landlord: landlordData[0]
     });
+
   } catch (err) {
     console.error(err.message);
     res.status(500).json({
@@ -439,6 +534,7 @@ exports.getLandlordProfile = async (req, res) => {
     });
   }
 };
+
 
 const s3Upload = require('../utils/s3Upload');
 
