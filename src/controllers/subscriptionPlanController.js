@@ -69,8 +69,8 @@ async function createPlan(req, res) {
       features: Array.isArray(features)
         ? features
         : features
-        ? [features]
-        : [],
+          ? [features]
+          : [],
       is_active: typeof is_active === "boolean" ? is_active : true,
     });
 
@@ -88,6 +88,8 @@ async function createPlan(req, res) {
     });
   }
 }
+
+
 
 // Seed some default subscription plans (Admin)
 async function seedDefaultPlans(req, res) {

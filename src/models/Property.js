@@ -227,7 +227,11 @@ const propertySchema = new mongoose.Schema({
   approvedAt: {
     type: Date,
     default: null
-  }
+  },
+  viewsCount: {
+    type: Number,
+    default: 0
+  },
 });
 
 // Add geospatial index for location-based queries

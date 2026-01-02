@@ -16,12 +16,12 @@ const mapFieldNames = (req, res, next) => {
     req.body.aadhaarNumber = req.body.aadhaar;
     delete req.body.aadhaar;
   }
-  
+
   if (req.body.pan && !req.body.panNumber) {
     req.body.panNumber = req.body.pan;
     delete req.body.pan;
   }
-  
+
   next();
 };
 
@@ -34,10 +34,10 @@ router.put('/profile', auth.required, fileUpload.single('profilePhoto'), mapFiel
 // Debug route to see what's being received
 router.post('/debug-register', (req, res) => {
   console.log('DEBUG REGISTER BODY:', JSON.stringify(req.body, null, 2));
-  res.json({ 
-    success: true, 
+  res.json({
+    success: true,
     message: 'Debug info logged to console',
-    receivedData: req.body 
+    receivedData: req.body
   });
 });
 
@@ -70,13 +70,17 @@ router.get('/tenants', auth.required, (req, res) => {
 
 // Property management
 router.get('/properties', auth.required, landlordController.getProperties);
-router.get('/properties/pending-properties',landlordController.getPendingProperties );
+router.get('/properties/pending-properties', landlordController.getPendingProperties);
 router.get('/properties/available', auth.required, (req, res) => {
   res.status(200).json({ success: true, message: "Available properties data will be available soon" });
 });
 router.post('/properties', auth.required, s3Upload.array('images', 10), landlordController.addProperty);
+router.post("/property/view/:id", landlordController.increaseViewCount);
 
-// Property update and delete routes
+
+// // Property update and delete routes
+// router.patch("/property/:id/approve",approveProperty);
+// router.patch("/property/:id/reject",rejectProperty);
 router.put('/properties/:id', auth.required, landlordController.updateProperty);
 router.put('/properties', auth.required, landlordController.updateProperty); // Alternative route allowing propertyId in body
 

@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const subscriptionPlanController = require('../controllers/subscriptionPlanController');
+const { authenticate } = require('../middleware/verifyToken');
+
 
 router.get('/', (req, res) => {
   res.status(200).json({ message: 'Subscription Plan Routes Working' });
@@ -9,7 +11,9 @@ router.get('/', (req, res) => {
  * Create a new subscription plan (Admin)
  * POST /api/subscription-plans/create
  */
-router.post('/create', subscriptionPlanController.createPlan);
+router.post('/create', authenticate, subscriptionPlanController.createPlan);
+
+
 
 /**
  * Seed default subscription plans (Admin)

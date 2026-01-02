@@ -658,6 +658,35 @@ exports.addProperty = async (req, res) => {
   }
 };
 
+exports.increaseViewCount = async (req, res) => {
+  try {
+    const propertyId = req.params.id;
+
+    const property = await Property.findByIdAndUpdate(
+      propertyId,
+      { $inc: { viewsCount: 1 } }, // 🔥 count +1
+      { new: true }
+    );
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        message: "Property not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      viewsCount: property.viewsCount
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 // Get all properties for a landlord
 exports.getProperties = async (req, res) => {
   try {
