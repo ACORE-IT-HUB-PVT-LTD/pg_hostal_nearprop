@@ -22,6 +22,7 @@ const visitRoutes = require('./routes/visitRoutes');
 const auth = require('./middleware/auth');
 const { attachRatingSummary } = require('./middleware/ratingEnhancement');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 const subscriptionPlanRoutes = require('./routes/subscriptionPlanRoutes');
 dotenv.config();
 
@@ -263,6 +264,8 @@ app.use((req, res, next) => {
   next();
 });
 app.use('/api/subscription', subscriptionRoutes);
+
+app.use("/api/payment", paymentRoutes);
 
 // Subscription Plan routes
 app.use('/api/subscription-plans', subscriptionPlanRoutes);
