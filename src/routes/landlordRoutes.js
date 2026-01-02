@@ -70,6 +70,7 @@ router.get('/tenants', auth.required, (req, res) => {
 
 // Property management
 router.get('/properties', auth.required, landlordController.getProperties);
+router.get('/properties/pending-properties',landlordController.getPendingProperties );
 router.get('/properties/available', auth.required, (req, res) => {
   res.status(200).json({ success: true, message: "Available properties data will be available soon" });
 });

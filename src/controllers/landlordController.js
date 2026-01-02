@@ -575,7 +575,8 @@ exports.addProperty = async (req, res) => {
       contactNumber,
       description,
       amenities,
-      landlordId: req.user.id
+      landlordId: req.user.id,
+      status: "pending"
     });
 
     // If rooms details provided, add them to the property
@@ -674,6 +675,22 @@ exports.getProperties = async (req, res) => {
     });
   }
 };
+
+
+exports.getPendingProperties = async (req, res) => {
+  try {
+    const properties = await Property.find({ status: "pending" })
+      .populate("landlordId", "name email phone");
+
+    res.json({
+      success: true,
+      properties
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
 
 // Get property by ID
 exports.getPropertyById = async (req, res) => {

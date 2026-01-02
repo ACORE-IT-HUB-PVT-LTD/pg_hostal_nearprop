@@ -75,12 +75,14 @@ const bedSchema = new mongoose.Schema({
 const roomSchema = new mongoose.Schema({
   name: { type: String, required: false }, // Modified to be optional and non-unique
   roomId: { type: String, default: () => `ROOM-${Math.random().toString(36).substr(2, 9)}` },
-  type: { type: String, enum: [
-    'PG', 'AC', // Added these new room types
-    'Single Sharing', 'Double Sharing', 'Triple Sharing', 'Four Sharing', 'Five Sharing',
-    'Six Sharing', 'More Than 6 Sharing', 'Private Room', 'Shared Room', 'Couple',
-    'Family', 'Male Only', 'Female Only', 'Unisex', 'Student Only', 'Working Professionals Only'
-  ], required: true },
+  type: {
+    type: String, enum: [
+      'PG', 'AC', // Added these new room types
+      'Single Sharing', 'Double Sharing', 'Triple Sharing', 'Four Sharing', 'Five Sharing',
+      'Six Sharing', 'More Than 6 Sharing', 'Private Room', 'Shared Room', 'Couple',
+      'Family', 'Male Only', 'Female Only', 'Unisex', 'Student Only', 'Working Professionals Only'
+    ], required: true
+  },
   status: { type: String, enum: ['Available', 'Not Available', 'Partially Available', 'Under Maintenance', 'Reserved'], default: 'Available' },
   price: { type: Number, required: true },
   capacity: { type: Number, default: 1 },
@@ -216,24 +218,33 @@ const propertySchema = new mongoose.Schema({
   occupiedSpace: { type: Number, default: 0 },
   isActive: { type: Boolean, default: true }, // Added for admin toggle functionality
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
+  status: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "pending"
+  },
+  approvedAt: {
+    type: Date,
+    default: null
+  }
 });
 
 // Add geospatial index for location-based queries
 propertySchema.index({ location: '2dsphere' });
 
 // Middleware to update location field from latitude and longitude before saving
-propertySchema.pre('save', function(next) {
+propertySchema.pre('save', function (next) {
   if (this.latitude && this.longitude) {
     this.location = {
       type: 'Point',
       coordinates: [this.longitude, this.latitude] // GeoJSON uses [longitude, latitude] order
     };
   }
-  
+
   // Update timestamps
   this.updatedAt = new Date();
-  
+
   next();
 });
 
