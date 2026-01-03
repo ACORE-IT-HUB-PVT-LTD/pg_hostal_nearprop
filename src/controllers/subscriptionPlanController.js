@@ -272,18 +272,78 @@ async function getPlanById(req, res) {
 }
 
 // Update a plan
+// async function updatePlan(req, res) {
+//   try {
+//     const { id } = req.params;
+//     const updates = req.body || {};
+//     if (updates.name) updates.name = updates.name.trim();
+
+//     const plan = await SubscriptionPlan.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+//     if (!plan) return res.status(404).json({ message: 'Plan not found' });
+//     return res.json({ message: 'Plan updated', plan });
+//   } catch (err) {
+//     console.error('updatePlan error', err);
+//     return res.status(500).json({ message: 'Internal server error', error: err.message });
+//   }
+// }
+
 async function updatePlan(req, res) {
   try {
     const { id } = req.params;
-    const updates = req.body || {};
-    if (updates.name) updates.name = updates.name.trim();
 
-    const plan = await SubscriptionPlan.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
-    if (!plan) return res.status(404).json({ message: 'Plan not found' });
-    return res.json({ message: 'Plan updated', plan });
+    // Allowed fields only (security)
+    const allowedFields = [
+      "name",
+      "price",
+      "currency",
+      "billing_cycle",
+      "duration_days",
+      "property_limit",
+      "reel_limit",
+      "features",
+      "is_active"
+    ];
+
+    const updates = {};
+
+    Object.keys(req.body || {}).forEach((key) => {
+      if (allowedFields.includes(key)) {
+        updates[key] = req.body[key];
+      }
+    });
+
+    // Extra cleanup
+    if (updates.name) {
+      updates.name = updates.name.trim();
+    }
+
+    // Prevent empty update
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        message: "No valid fields provided for update"
+      });
+    }
+
+    const plan = await SubscriptionPlan.findByIdAndUpdate(
+      id,
+      updates,
+      { new: true, runValidators: true }
+    );
+
+    if (!plan) {
+      return res.status(404).json({ message: "Plan not found" });
+    }
+
+    return res.json({
+      message: "Plan updated successfully",
+      plan
+    });
   } catch (err) {
-    console.error('updatePlan error', err);
-    return res.status(500).json({ message: 'Internal server error', error: err.message });
+    console.error("updatePlan error", err);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message
+    });
   }
 }
 
