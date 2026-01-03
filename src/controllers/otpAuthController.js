@@ -152,8 +152,8 @@ const verifyLoginOtp = async (req, res) => {
     const token = jwt.sign(
       {
         sub: user._id.toString(),
-        Id: users.id,
-        roles: user.role,
+        userId: users.id,
+        role,
         sessionId: uuidv4(),
         iss: 'NearpropBackend',
       },
