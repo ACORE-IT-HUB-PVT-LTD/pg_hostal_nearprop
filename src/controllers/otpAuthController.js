@@ -151,7 +151,7 @@ const verifyLoginOtp = async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       {
-        sub: user._id.toString(),
+        id: user._id.toString(),
         userId: users.id,
         role,
         sessionId: uuidv4(),
