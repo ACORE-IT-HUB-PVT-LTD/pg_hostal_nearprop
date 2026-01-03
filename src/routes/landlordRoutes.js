@@ -24,7 +24,7 @@ const mapFieldNames = (req, res, next) => {
 
   next();
 };
-
+//new
 // Landlord account operations (without password)
 router.post('/register', fileUpload.single('profilePhoto'), mapFieldNames, landlordController.registerLandlord);
 router.post('/find', mapFieldNames, landlordController.findLandlord);
