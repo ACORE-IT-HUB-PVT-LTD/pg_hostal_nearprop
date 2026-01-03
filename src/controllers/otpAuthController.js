@@ -3,6 +3,7 @@ const Landlord = require('../models/Landlord');
 const Tenant = require('../models/Tenant');
 const { redisClient } = require('../config/database');
 const otpService = require('../services/otpService');
+const { sequelize } = require('../config/pg');
 require('dotenv').config();
 
 /**
@@ -11,14 +12,14 @@ require('dotenv').config();
 const requestLoginOtp = async (req, res) => {
   try {
     const { mobile, userType } = req.body;
-    
+
     if (!mobile) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Mobile number is required' 
+      return res.status(400).json({
+        success: false,
+        message: 'Mobile number is required'
       });
     }
-    
+
     // Check if user exists based on user type
     let user;
     let isRegistered = false;
@@ -28,16 +29,16 @@ const requestLoginOtp = async (req, res) => {
       // Default to landlord
       user = await Landlord.findOne({ mobile });
     }
-    
+
     // Set registration status
     isRegistered = !!user;
-    
+
     // Generate OTP even if user is not registered
     const otp = otpService.generateOtp();
-    
+
     // Save OTP to database
     const savedOtp = await otpService.saveOtp(mobile, otp, 'login');
-    
+
     if (!savedOtp) {
       return res.status(500).json({
         success: false,
@@ -45,17 +46,17 @@ const requestLoginOtp = async (req, res) => {
         isRegistered
       });
     }
-    
+
     // Send OTP via SMS
     const smsSent = await otpService.sendOtp(mobile, otp);
-    
+
     // Always log the OTP for debugging (in production, you might want to remove this)
     console.log(`Generated OTP for ${mobile}: ${otp}`);
-    
+
     return res.status(200).json({
       success: true,
-      message: smsSent 
-        ? 'OTP sent successfully' 
+      message: smsSent
+        ? 'OTP sent successfully'
         : 'OTP generated but SMS service failed. Check server logs for OTP',
       mobile,
       otp,
@@ -78,14 +79,27 @@ const requestLoginOtp = async (req, res) => {
 const verifyLoginOtp = async (req, res) => {
   try {
     const { mobile, otp, userType } = req.body;
-    
+
     if (!mobile || !otp) {
       return res.status(400).json({
         success: false,
         message: 'Mobile and OTP are required'
       });
     }
-    
+
+    const [users] = await sequelize.query(
+      `
+  SELECT id,name
+  FROM users
+  WHERE mobile_number = :mobile_number
+  LIMIT 1
+  `,
+      {
+        replacements: { mobile },
+        type: sequelize.QueryTypes.SELECT
+      }
+    );
+
     // Verify OTP and get OTP record
     const otpRecord = await otpService.verifyOtp(mobile, otp);
 
@@ -130,14 +144,15 @@ const verifyLoginOtp = async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { 
-        id: user._id, 
-        role, 
-        mobile: user.mobile,
-        email: user.email || '' 
-      }, 
-      process.env.JWT_SECRET, 
-      { expiresIn: '30d' }
+      {
+        sub: user._id.toString(),
+        Id: users.id,
+        roles: user.role,
+        sessionId: uuidv4(),
+        iss: 'NearpropBackend',
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '10y' }
     );
 
     // Store token in Redis
