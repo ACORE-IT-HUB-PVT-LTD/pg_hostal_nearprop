@@ -11,6 +11,7 @@ async function createPlan(req, res) {
       billing_cycle,
       duration_days,
       property_limit,
+      reel_limit,
       features,
       is_active,
     } = req.body;
@@ -23,11 +24,12 @@ async function createPlan(req, res) {
       typeof price === "undefined" ||
       !billing_cycle ||
       !duration_days ||
-      typeof property_limit === "undefined"
+      typeof property_limit === "undefined" ||
+      typeof reel_limit === "undefined"
     ) {
       return res.status(400).json({
         message:
-          "name, price, billing_cycle, duration_days, and property_limit are required",
+          "name, price, billing_cycle, duration_days, and property_limit,and reel_limit are required",
       });
     }
 
@@ -42,6 +44,13 @@ async function createPlan(req, res) {
         message: "property_limit must be an integer greater than or equal to 1",
       });
     }
+
+    if (!Number.isInteger(reel_limit) || reel_limit < 1) {
+      return res.status(400).json({
+        message: "reel_limit must be an integer greater than or equal to 1",
+      });
+    }
+
 
     // =========================
     // ✅ Check duplicate plan
@@ -66,6 +75,7 @@ async function createPlan(req, res) {
       billing_cycle,
       duration_days,
       property_limit,
+      reel_limit,
       features: Array.isArray(features)
         ? features
         : features

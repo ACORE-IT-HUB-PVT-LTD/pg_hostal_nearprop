@@ -45,6 +45,12 @@ const planSchema = new mongoose.Schema(
       min: 1, // at least 1 property
     },
 
+    reel_limit: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+
     features: {
       type: [String],
       default: [],
