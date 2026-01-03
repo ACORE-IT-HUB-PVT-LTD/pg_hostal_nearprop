@@ -4,12 +4,14 @@ const Tenant = require('../models/Tenant');
 const { redisClient } = require('../config/database');
 const otpService = require('../services/otpService');
 const { sequelize } = require('../config/pg');
+const { QueryTypes } = require('sequelize');
+
 require('dotenv').config();
 
 /**
  * Request OTP for login
  */
-const requestLoginOtp = async (req, res) => {
+const requestLoginOtp = async(req, res) => {
   try {
     const { mobile, userType } = req.body;
 
@@ -87,18 +89,20 @@ const verifyLoginOtp = async (req, res) => {
       });
     }
 
-    const [users] = await sequelize.query(
+    const userPg = await sequelize.query(
       `
-  SELECT id,name
+  SELECT id, name
   FROM users
-  WHERE mobile_number = :mobile_number
+  WHERE mobile_number = :mobile
   LIMIT 1
   `,
       {
         replacements: { mobile },
-        type: sequelize.QueryTypes.SELECT
+        type: QueryTypes.SELECT
       }
     );
+
+    const users = userPg[0];
 
     // Verify OTP and get OTP record
     const otpRecord = await otpService.verifyOtp(mobile, otp);

@@ -18,15 +18,6 @@ async function testConnection() {
     try {
         await sequelize.authenticate();
         console.log('Connection to PostgreSQL DB has been established successfully.');
-        //     const [tables] = await sequelize.query(`
-        //   SELECT table_name 
-        //   FROM information_schema.tables 
-        //   WHERE table_schema = 'public' AND table_type = 'BASE TABLE';
-        // `);
-
-        // console.log(tables);
-        // const [users, metadata] = await sequelize.query('SELECT * FROM users;');
-        // console.log(users);
     } catch (error) {
         console.error('Unable to connect to the database:', error);
     }
