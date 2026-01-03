@@ -91,22 +91,28 @@ const verifyLoginOtp = async (req, res) => {
       });
     }
 
+    const mobileWithCountryCode = `+91${mobile}`;
     const userPg = await sequelize.query(
       `
-  SELECT id, name
-  FROM users
-  WHERE mobile_number = :mobile
-  LIMIT 1
-  `,
+      SELECT id, name
+      FROM users
+      WHERE mobile_number = :mobile
+      LIMIT 1
+      `,
       {
-        replacements: { mobile },
+        replacements: { mobile: mobileWithCountryCode },
         type: QueryTypes.SELECT
       }
     );
 
-    const users = userPg[0];
+    const pgUser = userPg[0];
 
-    // Verify OTP and get OTP record
+    if (!pgUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found in PostgreSQL'
+      });
+    }    // Verify OTP and get OTP record
     const otpRecord = await otpService.verifyOtp(mobile, otp);
 
     if (!otpRecord) {
@@ -152,7 +158,7 @@ const verifyLoginOtp = async (req, res) => {
     const token = jwt.sign(
       {
         id: user._id.toString(),
-        userId: users.id,
+        userId: pgUser.id,
         role,
         sessionId: uuidv4(),
         iss: 'NearpropBackend',
