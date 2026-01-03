@@ -8,7 +8,7 @@ const auth = require('../middleware/auth');
  * POST /api/subscription/buy
  * Required: userId, userType, planName, amount, duration
  */
-router.post('/buy', subscriptionController.buySubscription);
+router.post('/buy',auth.required, subscriptionController.buySubscription);
 
 /**
  * Get Subscription by User ID
