@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const slugify = require('slugify');
+// const slugify = require('slugify');
 
 const planSchema = new mongoose.Schema(
   {
@@ -10,11 +10,11 @@ const planSchema = new mongoose.Schema(
       index: true,
     },
 
-    slug: {
-      type: String,
-      // unique: true,
-      index: true,
-    },
+    // slug: {
+    //   type: String,
+    //   // unique: true,
+    //   index: true,
+    // },
 
     price: {
       type: Number,
@@ -66,11 +66,11 @@ const planSchema = new mongoose.Schema(
 );
 
 // 🔥 Auto-generate slug
-planSchema.pre('save', function (next) {
-  if (!this.slug) {
-    this.slug = slugify(this.name, { lower: true, strict: true });
-  }
-  next();
-});
+// planSchema.pre('save', function (next) {
+//   if (!this.slug) {
+//     this.slug = slugify(this.name, { lower: true, strict: true });
+//   }
+//   next();
+// });
 
 module.exports = mongoose.model("SubscriptionPlan", planSchema);
