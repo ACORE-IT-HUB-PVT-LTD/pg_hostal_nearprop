@@ -3,15 +3,17 @@ const Landlord = require('../models/Landlord');
 const Tenant = require('../models/Tenant');
 const { redisClient } = require('../config/database');
 const otpService = require('../services/otpService');
-const { sequelize } = require('../config/pg');
+const sequelize = require('../config/pg');
 const { QueryTypes } = require('sequelize');
+const { v4: uuidv4 } = require('uuid');
+
 
 require('dotenv').config();
 
 /**
  * Request OTP for login
  */
-const requestLoginOtp = async(req, res) => {
+const requestLoginOtp = async (req, res) => {
   try {
     const { mobile, userType } = req.body;
 
