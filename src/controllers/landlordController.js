@@ -881,7 +881,9 @@ exports.getPropertyByIdAdmin = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const property = await Property.findById(id);
+    const property = await Property.findById(id)
+      .populate('landlordId', 'name email phone');  // landlordId se landlord details populate karna
+
     if (!property) {
       return res.status(404).json({
         success: false,
@@ -889,16 +891,11 @@ exports.getPropertyByIdAdmin = async (req, res) => {
       });
     }
 
-    /**
-     * 🔐 AUTHORIZATION LOGIC
-     * - ADMIN → can view any property
-     * - LANDLORD → only own property
-     */
     const roles = req.user.roles || [];
     const isAdmin = roles.includes("ADMIN");
 
     if (!isAdmin) {
-      if (property.landlordId.toString() !== req.user.userId) {
+      if (property.landlordId._id.toString() !== req.user.userId) {
         return res.status(403).json({
           success: false,
           message: "Not authorized"
@@ -919,6 +916,7 @@ exports.getPropertyByIdAdmin = async (req, res) => {
     });
   }
 };
+
 
 // Update property
 exports.updateProperty = async (req, res) => {

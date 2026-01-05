@@ -87,8 +87,6 @@ router.post("/property/view/:id", landlordController.increaseViewCount);
 
 
 // // Property update and delete routes
-// router.patch("/property/:id/approve",approveProperty);
-// router.patch("/property/:id/reject",rejectProperty);
 router.put('/properties/:id', auth.required, landlordController.updateProperty);
 router.put('/properties', auth.required, landlordController.updateProperty); // Alternative route allowing propertyId in body
 
