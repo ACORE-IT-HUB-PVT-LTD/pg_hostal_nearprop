@@ -8,6 +8,7 @@ const roomImageController = require('../controllers/roomImageController');
 const bedImageController = require('../controllers/bedImageController');
 const { upload: fileUpload } = require('../utils/fileUpload');
 const { upload: s3Upload } = require('../utils/s3Upload');
+const authenticate = require("../middleware/authenticate");
 
 // Field name mapping middleware
 const mapFieldNames = (req, res, next) => {
@@ -70,7 +71,14 @@ router.get('/tenants', auth.required, (req, res) => {
 
 // Property management
 router.get('/properties', auth.required, landlordController.getProperties);
-router.get('/properties/pending-properties',auth.required ,landlordController.getPendingProperties);
+router.get('/properties/pending-properties', auth.required, landlordController.getPendingProperties);
+router.get('/properties/pending-properties/admin', authenticate, landlordController.getPendingProperties);
+router.patch(
+  '/properties/:propertyId/status/admin',
+  authenticate,
+  landlordController.updatePropertyStatus
+);
+
 router.get('/properties/available', auth.required, (req, res) => {
   res.status(200).json({ success: true, message: "Available properties data will be available soon" });
 });

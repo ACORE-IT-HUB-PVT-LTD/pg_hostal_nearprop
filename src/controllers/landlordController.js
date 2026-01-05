@@ -721,6 +721,62 @@ exports.getPendingProperties = async (req, res) => {
 };
 
 
+exports.updatePropertyStatus = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const { status, reason } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(propertyId)) {
+      return res.status(400).json({ success: false, message: 'Invalid property ID' });
+    }
+
+    if (!['APPROVED', 'REJECTED'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status value' });
+    }
+
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).json({ success: false, message: 'Property not found' });
+    }
+
+    if (property.status === status) {
+      return res.status(400).json({
+        success: false,
+        message: `Property already ${status.toLowerCase()}`
+      });
+    }
+
+    if (status === 'REJECTED' && !reason) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rejection reason is required'
+      });
+    }
+
+    property.status = status;
+    property.statusReason = status === 'REJECTED' ? reason : null;
+
+    await property.save(); // 👈 pre-save middleware handle karega dates
+
+    return res.json({
+      success: true,
+      message: `Property ${status.toLowerCase()} successfully`,
+      data: {
+        status: property.status,
+        approvedAt: property.approvedAt,
+        rejectedAt: property.rejectedAt,
+      }
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+
+
+
 // Get property by ID
 exports.getPropertyById = async (req, res) => {
   try {

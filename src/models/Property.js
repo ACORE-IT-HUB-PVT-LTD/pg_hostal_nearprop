@@ -225,10 +225,22 @@ const propertySchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
   status: {
     type: String,
-    enum: ["pending", "approved", "rejected"],
-    default: "pending"
+    enum: ["PENDING", "APPROVED", "REJECTED"],
+    default: "PENDING",
   },
+
+  statusReason: {
+    type: String,
+    trim: true,
+    default: null
+  },
+
   approvedAt: {
+    type: Date,
+    default: null
+  },
+
+  rejectedAt: {
     type: Date,
     default: null
   },
@@ -240,6 +252,27 @@ const propertySchema = new mongoose.Schema({
 
 // Add geospatial index for location-based queries
 propertySchema.index({ location: '2dsphere' });
+
+propertySchema.pre('save', function (next) {
+  if (this.isModified('status')) {
+
+    if (this.status === 'APPROVED') {
+      this.approvedAt = new Date();
+      this.rejectedAt = null;
+      this.statusReason = null;
+    }
+
+    if (this.status === 'REJECTED') {
+      if (!this.statusReason) {
+        return next(new Error('Rejection reason is required'));
+      }
+      this.rejectedAt = new Date();
+      this.approvedAt = null;
+    }
+  }
+  next();
+});
+
 
 // Middleware to update location field from latitude and longitude before saving
 propertySchema.pre('save', function (next) {
