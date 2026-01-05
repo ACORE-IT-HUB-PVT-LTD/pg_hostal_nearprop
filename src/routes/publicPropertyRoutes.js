@@ -3,6 +3,7 @@ const router = express.Router();
 const publicPropertyController = require('../controllers/publicPropertyController');
 const cors = require('cors');
 const { attachRatingSummary } = require('../middleware/ratingEnhancement');
+const authenticate = require('../middleware/authenticate');
 
 // Apply CORS middleware to all public routes
 const corsMiddleware = (req, res, next) => {
@@ -26,7 +27,7 @@ router.use(attachRatingSummary);
 router.get('/properties', corsMiddleware, publicPropertyController.getAllPublicProperties);
 
 // GET property by ID
-router.get('/property/:propertyId', corsMiddleware, publicPropertyController.getPublicPropertyById);
+router.get('/property/:propertyId', corsMiddleware, authenticate, publicPropertyController.getPublicPropertyById);
 
 // GET recommended properties - must come before the type route
 router.get('/properties/recommended', corsMiddleware, publicPropertyController.getRecommendedProperties);

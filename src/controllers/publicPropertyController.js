@@ -550,10 +550,11 @@ exports.getPublicPropertyById = async (req, res) => {
       });
     });
     
+    const pgUserId = req.user?.pgUserId || null;
     // Format property response with enhanced details
     const formattedProperty = {
       id: property._id,
-      ids: property.id,
+      ids: pgUserId,
       propertyId: property.propertyId,
       name: property.name,
       type: property.type,
