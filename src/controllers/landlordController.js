@@ -779,7 +779,9 @@ exports.updatePropertyStatus = async (req, res) => {
 
 // Get property by ID
 exports.getPropertyById = async (req, res) => {
+
   try {
+
     const property = await Property.findById(req.params.id);
 
     if (!property) {
@@ -812,6 +814,49 @@ exports.getPropertyById = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server Error"
+    });
+  }
+};
+
+exports.getPropertyByIdAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const property = await Property.findById(id);
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        message: "Property not found"
+      });
+    }
+
+    /**
+     * 🔐 AUTHORIZATION LOGIC
+     * - ADMIN → can view any property
+     * - LANDLORD → only own property
+     */
+    const roles = req.user.roles || [];
+    const isAdmin = roles.includes("ADMIN");
+
+    if (!isAdmin) {
+      if (property.landlordId.toString() !== req.user.userId) {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized"
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      property
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
     });
   }
 };

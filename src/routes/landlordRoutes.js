@@ -102,6 +102,12 @@ router.delete('/properties/images', auth.required, deletePropertyImagesHandler);
 
 router.delete('/properties/:id', auth.required, landlordController.deleteProperty);
 router.get('/properties/:id', auth.required, landlordController.getPropertyById);
+// Admin specific routes
+router.get(
+  '/admin/properties/:id',
+  authenticate,
+  landlordController.getPropertyByIdAdmin
+);
 
 // Booking and pending tenant routes
 router.get('/tenants/pending', auth.required, bookingController.getPendingTenants);
