@@ -26,6 +26,8 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const subscriptionPlanRoutes = require('./routes/subscriptionPlanRoutes');
 dotenv.config();
 
+
+
 const app = express();
 
 // CRITICAL FIX: Import the emergency admin bypass middleware

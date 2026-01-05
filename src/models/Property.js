@@ -190,6 +190,10 @@ const roomSchema = new mongoose.Schema({
 
 const propertySchema = new mongoose.Schema({
   propertyId: { type: String, unique: true, default: () => `PROP-${Math.random().toString(36).substr(2, 9)}` },
+  id: {
+    type: Number,
+    unique: true
+  },
   landlordId: { type: mongoose.Schema.Types.ObjectId, ref: 'Landlord', required: true },
   name: { type: String, required: true },
   type: { type: String, enum: ['PG', 'Hostel', 'Rental', '1 BHK', '2 BHK', '3 BHK', '4 BHK', '1 RK', 'Studio Apartment', 'Luxury Bungalows', 'Villas', 'Builder Floor', 'Flat', 'Room'], required: true },

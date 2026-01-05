@@ -553,6 +553,7 @@ exports.getPublicPropertyById = async (req, res) => {
     // Format property response with enhanced details
     const formattedProperty = {
       id: property._id,
+      ids: property.id,
       propertyId: property.propertyId,
       name: property.name,
       type: property.type,
