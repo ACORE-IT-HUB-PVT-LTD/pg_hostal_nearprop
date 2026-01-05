@@ -708,17 +708,76 @@ exports.getProperties = async (req, res) => {
 
 exports.getPendingProperties = async (req, res) => {
   try {
-    const properties = await Property.find({ status: "pending" })
-      .populate("landlordId", "name email phone");
+    const properties = await Property.aggregate([
+      // Filter pending properties
+      { $match: { status: "pending" } },
+
+      // Join landlord data
+      {
+        $lookup: {
+          from: "landlords",       // landlord collection name, check yours (maybe "users" or "landlords")
+          localField: "landlordId",
+          foreignField: "_id",
+          as: "landlord"
+        }
+      },
+
+      // Unwind landlord array to object
+      { $unwind: "$landlord" },
+
+      // Optionally, aggregate landlord related info (example: count total properties of landlord)
+      {
+        $lookup: {
+          from: "properties",
+          let: { landlordId: "$landlordId" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$landlordId", "$$landlordId"] } } },
+            { $count: "totalProperties" }
+          ],
+          as: "landlordStats"
+        }
+      },
+
+      // Unwind landlordStats (if none found, keep empty object)
+      {
+        $unwind: {
+          path: "$landlordStats",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+
+      // Shape output as needed
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          status: 1,
+          // other property fields
+
+          landlord: {
+            _id: 1,
+            name: 1,
+            email: 1,
+            phone: 1
+          },
+
+          landlordStats: {
+            totalProperties: "$landlordStats.totalProperties"
+          }
+        }
+      }
+    ]);
 
     res.json({
       success: true,
       properties
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
 
 
 exports.updatePropertyStatus = async (req, res) => {
