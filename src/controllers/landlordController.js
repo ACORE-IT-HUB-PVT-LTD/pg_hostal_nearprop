@@ -751,6 +751,8 @@ exports.getPendingProperties = async (req, res) => {
         $project: {
           _id: 1,
           name: 1,
+          type:1,
+          city:1,
           status: 1,
           // other property fields
 
