@@ -138,6 +138,7 @@ const initializeSocketIO = (server) => {
         // ✅ Save data in socket
         socket.userId = decoded.userId;
         socket.roles = userRoles;
+        socket.role = socket.roles.length > 0 ? socket.roles[0] : null;
 
         socket.join(`user:${decoded.userId}`);
 
