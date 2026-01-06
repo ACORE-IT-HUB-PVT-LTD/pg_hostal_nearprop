@@ -273,6 +273,14 @@ propertySchema.pre('save', function (next) {
   next();
 });
 
+propertySchema.path('status').set(function(value) {
+  if (typeof value === 'string') {
+    return value.toUpperCase();
+  }
+  return value;
+});
+
+
 
 // Middleware to update location field from latitude and longitude before saving
 propertySchema.pre('save', function (next) {

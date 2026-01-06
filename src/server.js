@@ -74,7 +74,7 @@ const allowedOrigins = [
 const allowedOrigins = [
   'https://nearprop.com',
 
-  'https://nearprop.in',          
+  'https://nearprop.in',
   'https://www.nearprop.in',
 
 
@@ -226,33 +226,33 @@ app.options('*', cors({
 app.use((req, res, next) => {
   // Get the origin from the request headers
   const origin = req.headers.origin;
-  
+
   // Set CORS headers - allow the specific origin if it exists, otherwise use wildcard
   res.header('Access-Control-Allow-Origin', origin || '*');
-  
+
   // Handle Vary header properly for caching
   res.header('Vary', 'Origin');
-  
+
   // Allow all common methods
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD');
-  
+
   // Allow all common headers
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Headers, Access-Control-Request-Method, Access-Control-Request-Headers, Cache-Control, Pragma');
-  
+
   // Allow credentials
   res.header('Access-Control-Allow-Credentials', 'true');
-  
+
   // Expose headers that client might need
   res.header('Access-Control-Expose-Headers', 'Content-Length, X-Request-ID');
-  
+
   // Cache preflight for 24 hours
   res.header('Access-Control-Max-Age', '86400');
-  
+
   // Handle preflight OPTIONS requests immediately
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
-  
+
   next();
 });
 
@@ -260,10 +260,10 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   // Create or forward tracing ID for request correlation
   req.traceId = req.headers['x-request-id'] || req.headers['x-trace-id'] || `req-${Date.now()}`;
-  
+
   // Add correlation ID header to all responses
   res.set('X-Request-ID', req.traceId);
-  
+
   // Record request start time for performance monitoring
   req.startTime = Date.now();
   next();
@@ -306,12 +306,12 @@ app.use('/api/properties', auth.required, (req, res, next) => {
 
 // Public routes - no authentication required
 // Apply specific CORS handling for public routes that were having issues
-app.use('/api/public', function(req, res, next) {
+app.use('/api/public', function (req, res, next) {
   // Ensure these specific endpoints always have proper CORS headers
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+
   // Handle preflight OPTIONS requests for public endpoints
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
@@ -336,7 +336,7 @@ const adminBypassMiddleware = (req, res, next) => {
   // For GET requests, always allow access without a token
   if (req.method === 'GET') {
     console.log('[ADMIN ACCESS] GET request detected - applying automatic admin access');
-    
+
     // Inject admin data directly to request object
     req.admin = {
       _id: 'system-admin-' + Date.now(),
@@ -345,7 +345,7 @@ const adminBypassMiddleware = (req, res, next) => {
       role: 'admin',
       isActive: true
     };
-    
+
     req.user = {
       id: 'system-admin-' + Date.now(),
       role: 'admin',
@@ -354,11 +354,11 @@ const adminBypassMiddleware = (req, res, next) => {
       isAdmin: true,
       bypassAuth: true
     };
-    
+
     // Skip remaining middleware for GET requests
     return next();
   }
-  
+
   next();
 };
 
@@ -383,7 +383,7 @@ app.get('/api/admin/dashboard', (req, res) => {
 app.get('/api/admin/landlords', (req, res) => {
   console.log('[EMERGENCY DIRECT ACCESS] Admin landlords accessed with zero authentication');
   console.log('Query params:', req.query);
-  
+
   try {
     // Set up admin context directly
     req.admin = {
@@ -393,7 +393,7 @@ app.get('/api/admin/landlords', (req, res) => {
       role: 'super_admin',
       isActive: true
     };
-    
+
     req.user = {
       id: 'emergency-direct-' + Date.now(),
       role: 'super_admin',
@@ -402,15 +402,15 @@ app.get('/api/admin/landlords', (req, res) => {
       permissions: ['all'],
       emergencyAccess: true
     };
-    
+
     // Process query parameters
     const page = req.query.page ? parseInt(req.query.page) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit) : 10;
     const search = req.query.search || '';
-    
+
     // Handle the logic directly here instead of using the controller
     const Landlord = require('./models/Landlord');
-    
+
     // Build filter
     const filter = {};
     if (search) {
@@ -421,7 +421,7 @@ app.get('/api/admin/landlords', (req, res) => {
         { mobile: searchRegex }
       ];
     }
-    
+
     // Execute query directly
     Landlord.find(filter)
       .select('name email mobile profilePhoto properties createdAt')
@@ -430,11 +430,11 @@ app.get('/api/admin/landlords', (req, res) => {
       .sort({ createdAt: -1 })
       .then(async (landlords) => {
         const totalLandlords = await Landlord.countDocuments(filter);
-        
+
         // Process landlord data
         const landlordData = await Promise.all(landlords.map(async (landlord) => {
           const propertyCount = landlord.properties ? landlord.properties.length : 0;
-          
+
           return {
             id: landlord._id,
             name: landlord.name,
@@ -445,7 +445,7 @@ app.get('/api/admin/landlords', (req, res) => {
             createdAt: landlord.createdAt
           };
         }));
-        
+
         // Send response
         res.status(200).json({
           success: true,
@@ -522,7 +522,7 @@ app.get('/api/admin/reels', (req, res) => {
 app.use('/api/admin', (req, res, next) => {
   if (req.method === 'GET') {
     console.log('[ADMIN ROUTER] GET request - bypassing authentication entirely');
-    
+
     // Set admin user data for GET requests
     req.admin = {
       _id: 'bypass-admin-' + Date.now(),
@@ -531,18 +531,18 @@ app.use('/api/admin', (req, res, next) => {
       role: 'admin',
       isActive: true
     };
-    
+
     req.user = {
       id: 'bypass-admin-' + Date.now(),
       role: 'admin',
       isAdmin: true,
       permissions: ['all']
     };
-    
+
     // Skip other middleware and proceed to routes
     return next();
   }
-  
+
   // For non-GET requests, continue with normal middleware chain
   next();
 }, adminRoutes);
@@ -582,6 +582,9 @@ app.use(fileUploadErrorHandler);
 // API Gateway compatible error handling middleware
 app.use(gatewayErrorHandler);
 
+app.use('/api/chat', require('./routes/chatRoutes'));
+
+
 // Create HTTP server
 const PORT = process.env.PORT || 3002;
 const server = http.createServer(app);
@@ -591,7 +594,7 @@ const socketService = require('./services/socketService');
 const io = socketService.initializeSocketIO(server);
 
 // Start server
-server.listen(PORT,'0.0.0.0',() => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Socket.IO initialized for real-time notifications`);
 });
