@@ -710,7 +710,7 @@ exports.getPendingProperties = async (req, res) => {
   try {
     const properties = await Property.aggregate([
       // Filter pending properties
-      { $match: { status: "pending" } },
+      { $match: { status: "PENDING" } },
 
       // Join landlord data
       {
