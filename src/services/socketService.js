@@ -59,30 +59,49 @@ const initializeSocketIO = (server) => {
          * decoded example:
          * {
          *   userId: "123",
-         *   roles: ["USER"]
+         *   roles: ["USER", "ADVISOR"],
+         *   role: "landlord"  // optional single role string
          * }
          */
 
-        // const userRoles = decoded.roles || [];
-        const userRoles = ["USER","landlord"];
+        // Extract roles array and single role string if present
+        const rolesArray = Array.isArray(decoded.roles) ? decoded.roles : [];
+        const singleRole = typeof decoded.role === 'string' ? decoded.role.toLowerCase() : null;
 
-        const allowed = userRoles.some(r =>
-          ALLOWED_CHAT_ROLES.includes(r)
+        // Define allowed chat roles (example)
+        const ALLOWED_CHAT_ROLES = ['user', 'advisor', 'franchisee', 'developer', 'seller'];
+
+        // Check if roles array contains any allowed roles
+        const allowedByRolesArray = rolesArray.some(r =>
+          ALLOWED_CHAT_ROLES.includes(r.toLowerCase())
         );
 
-        if (!allowed) {
+        // If roles array present and allowed
+        if (rolesArray.length > 0 && allowedByRolesArray) {
+          // Prioritize first allowed role from rolesArray
+          const matchedRole = rolesArray.find(r =>
+            ALLOWED_CHAT_ROLES.includes(r.toLowerCase())
+          );
+
+          socket.userId = decoded.userId;
+          socket.roles = rolesArray;
+          socket.role = 'user';
+
+        } else if (singleRole === 'landlord') {
+          // Single role landlord means vendor access
+          socket.userId = decoded.userId;
+          socket.roles = [singleRole];
+          socket.role = 'vender';
+
+        } else {
+          // Deny access otherwise
           return socket.emit('authenticated', {
             success: false,
             error: 'Chat access denied'
           });
         }
 
-        // Save on socket
-        socket.userId = decoded.userId;
-        socket.roles = userRoles;
-        socket.role = userRoles[0];
-
-        // Personal room (for notifications)
+        // Join personal room for notifications
         socket.join(`user:${socket.userId}`);
 
         socket.emit('authenticated', {
@@ -169,10 +188,16 @@ const initializeSocketIO = (server) => {
       if (!roomId || !message) return;
 
       try {
+        const property = await Property.findById(propertyId);
+        if (!property) throw new Error('Property not found');
+
+        const vendorId = property.landlordId.toString();
+
         const savedMessage = await ChatMessage.create({
           roomId,
           propertyId,
           senderId: socket.userId,
+          receiverId: vendorId,
           senderRole: socket.role,
           message
         });

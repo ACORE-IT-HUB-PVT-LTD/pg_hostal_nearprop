@@ -24,6 +24,8 @@ const { attachRatingSummary } = require('./middleware/ratingEnhancement');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const subscriptionPlanRoutes = require('./routes/subscriptionPlanRoutes');
+const { initializeSocketIO } = require('./socket/socket'); // Correct path
+
 dotenv.config();
 
 
@@ -590,8 +592,12 @@ const PORT = process.env.PORT || 3002;
 const server = http.createServer(app);
 
 // Initialize Socket.IO
-const socketService = require('./services/socketService');
-const io = socketService.initializeSocketIO(server);
+// const socketService = require('./services/socketService');
+// const io = socketService.initializeSocketIO(server);
+const io = initializeSocketIO(server);
+
+
+
 
 // Start server
 server.listen(PORT, '0.0.0.0', () => {

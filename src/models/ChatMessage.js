@@ -19,14 +19,14 @@ const chatMessageSchema = new mongoose.Schema(
             required: true,
         },
 
+        receiverId: {
+            type: String,  
+            required: true,
+        },
+
         senderRole: {
             type: String,
-            enum: ['ADVISOR',
-                'USER',
-                'FRANCHISEE',
-                'DEVELOPER',
-                'SELLER',
-                'landlord'],
+            enum: ['LANDLORD', 'VENDOR', 'ADMIN', 'USER'],
             required: true
         },
 

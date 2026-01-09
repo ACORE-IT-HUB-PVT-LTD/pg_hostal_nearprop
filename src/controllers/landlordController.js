@@ -894,9 +894,11 @@ exports.getPropertyByIdAdmin = async (req, res) => {
     }
 
     const roles = req.user.roles || [];
-    const isAdmin = roles.includes("ADMIN");
+    // const isAdmin = roles.includes("ADMIN");
+    const isAdminOrSubadmin = roles.includes("ADMIN") || roles.includes("SUBADMIN");
 
-    if (!isAdmin) {
+
+    if (!isAdminOrSubadmin) {
       if (property.landlordId._id.toString() !== req.user.userId) {
         return res.status(403).json({
           success: false,

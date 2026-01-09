@@ -4,7 +4,7 @@ const auth = require('../middleware/auth');
 const ChatMessage = require('../models/ChatMessage');
 
 // Get chat history by room
-router.get('/history/:roomId', auth.required, async (req, res) => {
+router.get('/history/:roomId', async (req, res) => {
   try {
     const messages = await ChatMessage
       .find({ roomId: req.params.roomId })
